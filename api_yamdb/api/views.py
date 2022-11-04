@@ -1,14 +1,48 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, permissions, status
+from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from reviews.models import Comment, Review, Title, Category, Genre
 from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import (
   CommentSerializer, ReviewSerializer, TitleSerializer,
-  CategorySerializer, GenreSerializer,
+  CategorySerializer, GenreSerializer, UserSerializer
 )
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from Users.models import User
+from .permissions import IsAdmin
 import datetime
 
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsAdmin,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("username",)
+
+    @action(
+        methods=["get", "patch"],
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+    )
+    def me(self, request):
+        if request.method == "PATCH":
+            user = get_object_or_404(User, id=request.user.id)
+            serializer = UserSerializer(
+                user,
+                data=request.data,
+                partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
