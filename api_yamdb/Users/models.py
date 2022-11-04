@@ -1,13 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-USER = "user"
-MODERATOR = "moderator"
-ADMIN = "admin"
+
 ROLE_CHOICES = (
-    (USER, "Аутенифицированный пользователь"),
-    (MODERATOR, "Модератор"),
-    (ADMIN, "Администратор")
+    ("user", "Аутенифицированный пользователь"),
+    ("moderator", "Модератор"),
+    ("admin", "Администратор")
 )
 
 class User(AbstractUser):
@@ -28,7 +26,7 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=30,
         choices=ROLE_CHOICES,
-        default=USER,
+        default="user",
         verbose_name="Пользовательская роль",
     )
 
