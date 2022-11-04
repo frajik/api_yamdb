@@ -1,9 +1,34 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 from rest_framework.pagination import PageNumberPagination
-from reviews.models import Comment, Review, Title
+from reviews.models import Comment, Review, Title, Category, Genre
+from django_filters.rest_framework import DjangoFilterBackend
+from .serializers import (
+  CommentSerializer, ReviewSerializer, TitleSerializer,
+  CategorySerializer, GenreSerializer,
+)
+import datetime
 
-from serializers import CommentSerializer, ReviewSerializer
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', 'category', 'genre', 'year',)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
