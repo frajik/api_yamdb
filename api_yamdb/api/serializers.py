@@ -1,10 +1,11 @@
+import datetime as dt
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from reviews.models import Comment, Review, Title, Category, Genre
-from Users.models import User, ROLE_CHOICES
 from rest_framework.relations import SlugRelatedField
-import datetime as dt
+from reviews.models import Category, Comment, Genre, Review, Title
+from Users.models import ROLE_CHOICES, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -81,6 +82,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     genre = SlugRelatedField(many=True, slug_field='name', read_only=True)
     category = SlugRelatedField(many=False, slug_field='name', read_only=True)
+    rating = serializers.FloatField()
 
     class Meta:
         fields = ('name', 'year', 'description', 'genre', 'category')

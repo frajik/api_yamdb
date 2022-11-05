@@ -1,18 +1,20 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, filters, permissions, status
-from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
-from reviews.models import Comment, Review, Title, Category, Genre
-from django_filters.rest_framework import DjangoFilterBackend
-from .serializers import (
-  CommentSerializer, ReviewSerializer, TitleSerializer,
-  CategorySerializer, GenreSerializer, UserSerializer
-)
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
-from Users.models import User
-from .permissions import IsAdmin
 import datetime
+
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from reviews.models import Category, Comment, Genre, Review, Title
+from Users.models import User
+
+from .permissions import IsAdmin
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, TitleSerializer,
+                          UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -44,6 +46,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -59,7 +62,8 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('name')
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'category', 'genre', 'year',)
