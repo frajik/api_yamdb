@@ -83,7 +83,7 @@ class TitleSerializer(serializers.ModelSerializer):
     category = SlugRelatedField(many=False, slug_field='name', read_only=True)
 
     class Meta:
-        fields = ('name', 'year', 'description', 'genre', 'category')
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
         model = Title
 
     def get_year(self, obj):
