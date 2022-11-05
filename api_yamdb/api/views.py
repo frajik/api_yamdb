@@ -1,4 +1,15 @@
+import datetime
+
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from api_yamdb.settings import EMAIL_HOST_USER
@@ -14,9 +25,13 @@ from .serializers import (
 )
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+
 from Users.models import User
+
 from .permissions import IsAdmin
-import datetime
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, TitleSerializer,
+                          UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -47,6 +62,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 @api_view(['POST'])
@@ -93,7 +109,8 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('name')
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'category', 'genre', 'year',)
