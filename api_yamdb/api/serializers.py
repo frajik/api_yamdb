@@ -56,6 +56,14 @@ class NewUserRegSerializer(serializers.Serializer):
     
     def validate_email(self, email):
         return UserSerializer.validate_email(self, email)
+    
+    def save(self):
+        user = User(
+            username=self.validated_data["username"],
+            email = self.validated_data["email"],
+        )
+        user.save()
+        return user
 
 
 class GetJWTTokenSerializer(serializers.Serializer):
