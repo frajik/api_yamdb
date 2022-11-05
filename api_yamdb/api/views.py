@@ -2,13 +2,30 @@ import datetime
 
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from reviews.models import Category, Comment, Genre, Review, Title
+
+
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from api_yamdb.settings import EMAIL_HOST_USER
+from rest_framework import viewsets, filters, permissions, status
+from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+from reviews.models import Comment, Review, Title, Category, Genre
+from django_filters.rest_framework import DjangoFilterBackend
+from .serializers import (
+  CommentSerializer, ReviewSerializer, TitleSerializer,
+  CategorySerializer, GenreSerializer, UserSerializer,
+  NewUserRegSerializer, GetJWTTokenSerializer
+)
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
 from Users.models import User
 
 from .permissions import IsAdmin
@@ -45,6 +62,36 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def send_code(request):
+    serializer = GetJWTTokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data.get('username')
+    email = serializer.validated_data.get('email')
+    try:
+        user = User.objects.create(
+            username=username,
+            email=email,
+            is_active=False
+        )
+    except Exception:
+        return Response(
+            request.data, status=status.HTTP_400_BAD_REQUEST
+        )
+    confirmation_code = default_token_generator.make_token(user)
+    User.objects.filter(username=username).update(
+        confirmation_code=confirmation_code
+    )
+    email_subject = 'Confirmation code for YAMDB'
+    message = f'Your code: {confirmation_code}'
+    send_mail(email_subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
+    return Response(
+        request.data, status=status.HTTP_200_OK
+    )
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

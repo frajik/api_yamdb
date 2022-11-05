@@ -85,7 +85,7 @@ class TitleSerializer(serializers.ModelSerializer):
     rating = serializers.FloatField()
 
     class Meta:
-        fields = ('name', 'year', 'description', 'genre', 'category')
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
         model = Title
 
     def get_year(self, obj):
