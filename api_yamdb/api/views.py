@@ -5,6 +5,7 @@ from api_yamdb.settings import EMAIL_HOST_USER
 from rest_framework import viewsets, filters, permissions, status
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Comment, Review, Title, Category, Genre
 from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import (
@@ -15,16 +16,17 @@ from .serializers import (
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from Users.models import User
-from .permissions import IsAdmin
+from .permissions import IsAdminOnly, IsAdminModeratAuthorOrReadOnly, AnonReadOnly
 import datetime
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAdmin,)
+    permission_classes = (IsAdminOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("username",)
+    lookup_field = "username"
 
     @action(
         methods=["get", "patch"],
@@ -52,12 +54,12 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def send_code(request):
-    serializer = GetJWTTokenSerializer(data=request.data)
+    serializer = NewUserRegSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    username = serializer.validated_data.get('username')
-    email = serializer.validated_data.get('email')
+    username = serializer.validated_data.get("username")
+    email = serializer.validated_data.get("email")
     try:
-        user = User.objects.create(
+        user = User.objects.get_or_create(
             username=username,
             email=email,
             is_active=False
@@ -75,6 +77,24 @@ def send_code(request):
     send_mail(email_subject, message, EMAIL_HOST_USER, [email], fail_silently=False)
     return Response(
         request.data, status=status.HTTP_200_OK
+    )
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def get_token(request):
+    serializer = GetJWTTokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data.get("username")
+    confirmation_code = serializer.validated_data.get("confirmation_code")
+    user = get_object_or_404(User, username=username)
+    if confirmation_code == user.confirmation_code:
+        token = AccessToken.for_user(user)
+        return Response(
+            {"token": f"{token}"}, status=status.HTTP_200_OK
+        )
+    return Response(
+        {"confirmation_code": "Wrong confirmation code"},
+        status=status.HTTP_400_BAD_REQUEST
     )
 
 
@@ -97,12 +117,16 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'category', 'genre', 'year',)
+    permission_classes = (AnonReadOnly, IsAdminOnly,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = PageNumberPagination
-    #permission_classes = ?
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsAdminModeratAuthorOrReadOnly,
+    )
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get("title_id"))
@@ -117,7 +141,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = PageNumberPagination
-    #permission_classes = ?
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsAdminModeratAuthorOrReadOnly,
+    )
 
     def get_queryset(self):
         review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
