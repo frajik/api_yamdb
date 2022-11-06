@@ -9,15 +9,6 @@ from Users.models import ROLE_CHOICES, User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.RegexField(regex=r'^[\w.@+-]+\z', max_length=150)
-    email = serializers.CharField(max_length=254)
-    first_name = serializers.CharField(max_length=150, required=False)
-    last_name = serializers.CharField(max_length=150, required=False)
-    role = serializers.ChoiceField(
-        choices=ROLE_CHOICES,
-        default="user",
-        required=False
-    )
 
     class Meta:
         fields=("username", "email", "first_name", "last_name", "bio", "role")
@@ -47,9 +38,34 @@ class UserSerializer(serializers.ModelSerializer):
             )
         return email
 
+
+class MePatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ("username", "email", "first_name", "last_name", "bio", "role",)
+        model = User
+        read_only_fields = ("role",)
+
+# class NewUserRegSerializer(serializers.ModelSerializer):
+#     fields = ("username", "email")
+#     model = User
+
+#     def save(self):
+#         user = User(
+#             username=self.validated_data["username"],
+#             email = self.validated_data["email"],
+#         )
+#         user.save()
+#         return user
+
+#     def validate_username(self, username):
+#         return UserSerializer.validate_username(self, username)
+    
+#     def validate_email(self, email):
+#         return UserSerializer.validate_email(self, email)
+
 class NewUserRegSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
-    username = serializers.RegexField(regex=r'^[\w.@+-]+\z', max_length=150, required=True)
+    username = serializers.CharField(max_length=150, required=True)
 
     def validate_username(self, username):
         return UserSerializer.validate_username(self, username)
@@ -108,12 +124,10 @@ class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(
         read_only=True, slug_field='id'
     )
-    score = serializers.IntegerField(
-        validators=(MinValueValidator(1), MaxValueValidator(10))
-    )
+
 
     class Meta:
-        fields = '__all__'
+        fields = ("id", "text", "title", "author", "score", "pub_date",)
         model = Review
 
     def validate(self, data):

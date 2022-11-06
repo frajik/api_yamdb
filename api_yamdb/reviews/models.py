@@ -99,7 +99,7 @@ class Review(models.Model):
         verbose_name="Дата публикации отзыва"
 
     )
-    score = models.IntegerField
+    score = models.IntegerField()
 
     class Meta:
         verbose_name = "Отзыв"
