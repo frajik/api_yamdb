@@ -72,12 +72,10 @@ def send_code(request):
             user = serializer.save()
             data["email"] = user.email
             data["username"] = user.username
-            code = default_token_generator.make_token(user)
+            confirmation_code = default_token_generator.make_token(user)
             send_mail(
-                subject="yamdb registrations",
-                message=f"Пользователь {user.username} успешно"
-                f"зарегистрирован.\n"
-                f"Код подтверждения: {code}",
+                subject="Confirmation code for YAMDB",
+                message=f"Confirmation code: {confirmation_code}",
                 from_email=None,
                 recipient_list=[user.email],
             )

@@ -45,23 +45,6 @@ class MePatchSerializer(serializers.ModelSerializer):
         model = User
         read_only_fields = ("role",)
 
-# class NewUserRegSerializer(serializers.ModelSerializer):
-#     fields = ("username", "email")
-#     model = User
-
-#     def save(self):
-#         user = User(
-#             username=self.validated_data["username"],
-#             email = self.validated_data["email"],
-#         )
-#         user.save()
-#         return user
-
-#     def validate_username(self, username):
-#         return UserSerializer.validate_username(self, username)
-    
-#     def validate_email(self, email):
-#         return UserSerializer.validate_email(self, email)
 
 class NewUserRegSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
