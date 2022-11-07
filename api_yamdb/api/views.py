@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from api_yamdb.settings import EMAIL_HOST_USER
-from rest_framework import viewsets, filters, permissions, status
+from rest_framework import viewsets, filters, permissions, status, mixins
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import AccessToken
@@ -20,21 +20,23 @@ from .serializers import (
     CommentSerializer, ReviewSerializer, TitleSerializer,
     CategorySerializer, GenreSerializer, UserSerializer,
     NewUserRegSerializer, GetJWTTokenSerializer,
-    MePatchSerializer
+    MePatchSerializer, GetTitleSerializer
 )
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from Users.models import User
-
-from .permissions import IsAdminOnly, IsAdminModeratAuthorOrReadOnly, AnonReadOnly
+from .permissions import (
+    IsAdmin, IsAdminOrReadOnly, IsAdminModeratAuthorOrReadOnly,
+)
+from .filters import TitleFilter
 import datetime
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAdminOnly,)
+    permission_classes = (IsAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("username",)
     lookup_field = "username"
@@ -104,35 +106,46 @@ def get_token(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(
+    mixins.ListModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = "slug"
 
-
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(
+    mixins.ListModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-
+    permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = "slug"
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')).order_by('name')
-
+    queryset = (
+        Title.objects.all().annotate(Avg("reviews__score")).order_by("name")
+    )
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'category', 'genre', 'year',)
-    permission_classes = (AnonReadOnly, IsAdminOnly,)
+    filterset_class = TitleFilter
+    permission_classes = (IsAdminOrReadOnly,)
 
+    def get_serializer_class(self):
+        if self.request.method in ['POST', "PATCH"]:
+            return TitleSerializer
+        return GetTitleSerializer
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = PageNumberPagination
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
         IsAdminModeratAuthorOrReadOnly,
     )
 
@@ -150,7 +163,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = PageNumberPagination
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
         IsAdminModeratAuthorOrReadOnly,
     )
 
