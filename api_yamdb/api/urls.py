@@ -22,7 +22,7 @@ router.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet,
     basename='review'
-    )
+)
 router.register('titles', TitleViewSet)
 router.register('users', UserViewSet)
 

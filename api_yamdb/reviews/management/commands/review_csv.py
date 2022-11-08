@@ -1,7 +1,7 @@
 from csv import DictReader
 from django.core.management import BaseCommand
 
-from ...models import Review
+from reviews.models import Review
 
 ALREADY_LOADED_ERROR_MESSAGE = """
 If you need to reload the Review data from the CSV file,

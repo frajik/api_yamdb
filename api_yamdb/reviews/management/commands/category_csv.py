@@ -1,7 +1,7 @@
 from csv import DictReader
 from django.core.management import BaseCommand
 
-from ...models import Category
+from reviews.models import Category
 
 ALREADY_LOADED_ERROR_MESSAGE = """
 If you need to reload the Category data from the CSV file,
@@ -23,5 +23,7 @@ class Command(BaseCommand):
         print("Loading data")
 
         for row in DictReader(open('static/data/category.csv')):
-            category = Category(id=row['id'], name=row['name'], slug=row['slug'])
+            category = Category(
+                id=row['id'], name=row['name'], slug=row['slug']
+            )
             category.save()

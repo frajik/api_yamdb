@@ -1,7 +1,7 @@
 from csv import DictReader
 from django.core.management import BaseCommand
 
-from ...models import Genre
+from reviews.models import Genre
 
 ALREADY_LOADED_ERROR_MESSAGE = """
 If you need to reload the Category data from the CSV file,

@@ -107,7 +107,7 @@ class Review(models.Model):
         constraints = [models.UniqueConstraint(
             fields=["title", "author"],
             name="unique_reviews"
-            ),
+        ),
         ]
 
     def __str__(self):
