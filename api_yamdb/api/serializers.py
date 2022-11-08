@@ -1,18 +1,17 @@
 import datetime as dt
 
-
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 from reviews.models import Category, Comment, Genre, Review, Title
-from Users.models import ROLE_CHOICES, User
+from Users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields=("username", "email", "first_name", "last_name", "bio", "role")
-        model=User
+        fields = ("username", "email", "first_name",
+                  "last_name", "bio", "role")
+        model = User
 
     def validate_username(self, username):
         duplicate_name = User.objects.filter(
@@ -41,7 +40,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 class MePatchSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ("username", "email", "first_name", "last_name", "bio", "role",)
+        fields = ("username", "email", "first_name",
+                  "last_name", "bio", "role",)
         model = User
         read_only_fields = ("role",)
 
@@ -52,14 +52,14 @@ class NewUserRegSerializer(serializers.Serializer):
 
     def validate_username(self, username):
         return UserSerializer.validate_username(self, username)
-    
+
     def validate_email(self, email):
         return UserSerializer.validate_email(self, email)
-    
+
     def save(self):
         user = User(
             username=self.validated_data["username"],
-            email = self.validated_data["email"],
+            email=self.validated_data["email"],
         )
         user.save()
         return user
@@ -73,7 +73,7 @@ class GetJWTTokenSerializer(serializers.Serializer):
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug')
+        fields = ("name", "slug")
         lookup_field = "slug"
         model = Category
 
@@ -81,7 +81,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', 'slug')
+        fields = ("name", "slug")
         lookup_field = "slug"
         model = Genre
 
@@ -94,9 +94,10 @@ class GetTitleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category', "rating",)
+        fields = ("id", "name", "year", "description",
+                  "genre", "category", "rating",)
         model = Title
-        read_only_fields = ("id", "name", "year", "description" )
+        read_only_fields = ("id", "name", "year", "description")
 
     def get_year(self, obj):
         if dt.datetime.now().year < obj.year:
@@ -110,6 +111,7 @@ class TitleSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(), slug_field="slug"
     )
+
     class Meta:
         model = Title
         fields = ("id", "name", "year", "description", "genre", "category",)
@@ -117,17 +119,16 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username',
+        read_only=True, slug_field="username",
         default=serializers.CurrentUserDefault(),
     )
     title = serializers.SlugRelatedField(
-        read_only=True, slug_field='name'
+        read_only=True, slug_field="name"
     )
 
     class Meta:
         fields = ("id", "text", "title", "author", "score", "pub_date",)
         model = Review
-
 
     def validate(self, data):
         if self.context['request'].method != 'POST':
@@ -144,11 +145,12 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username',
+        read_only=True, slug_field="username",
     )
     review = serializers.SlugRelatedField(
         slug_field="text", read_only=True,
     )
+
     class Meta:
         fields = ("id", "author", "review", "text", "pub_date",)
         model = Comment
