@@ -1,6 +1,5 @@
 import datetime as dt
 
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title
 from Users.models import User
@@ -38,7 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
         return email
 
 
-class MePatchSerializer(serializers.ModelSerializer):
+class MeUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("username", "email", "first_name",
                   "last_name", "bio", "role",)
@@ -56,16 +55,8 @@ class NewUserRegSerializer(serializers.Serializer):
     def validate_email(self, email):
         return UserSerializer.validate_email(self, email)
 
-    def save(self):
-        user = User(
-            username=self.validated_data["username"],
-            email=self.validated_data["email"],
-        )
-        user.save()
-        return user
 
-
-class GetJWTTokenSerializer(serializers.Serializer):
+class ConfirmationCodeSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
@@ -134,9 +125,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         if self.context['request'].method != 'POST':
             return data
         title_id = self.context['view'].kwargs.get('title_id')
-        title = get_object_or_404(Title, id=title_id)
         user = self.context['request'].user
-        if Review.objects.filter(title=title, author=user):
+        if Review.objects.filter(title=title_id, author=user):
             raise serializers.ValidationError(
                 'Нельзя оставить больше одного отзыва.'
             )

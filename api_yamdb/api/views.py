@@ -3,20 +3,21 @@ from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title
 from Users.models import User
+from .mixins import ListCreateDestroy
 
 from .filters import TitleFilter
 from .permissions import (IsAdmin, IsAdminModeratAuthorOrReadOnly,
                           IsAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, GetJWTTokenSerializer,
-                          GetTitleSerializer, MePatchSerializer,
+                          GenreSerializer, ConfirmationCodeSerializer,
+                          GetTitleSerializer, MeUpdateSerializer,
                           NewUserRegSerializer, ReviewSerializer,
                           TitleSerializer, UserSerializer)
 
@@ -37,17 +38,14 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         if request.method == "PATCH":
             user = get_object_or_404(User, id=request.user.id)
-            serializer = MePatchSerializer(
+            serializer = MeUpdateSerializer(
                 user,
                 data=request.data,
                 partial=True
             )
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(role=request.user.role)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -58,28 +56,24 @@ def send_code(request):
     if request.method == "POST":
         serializer = NewUserRegSerializer(data=request.data)
         data = {}
-        if serializer.is_valid():
-            user = serializer.save()
-            data["email"] = user.email
-            data["username"] = user.username
-            confirmation_code = default_token_generator.make_token(user)
-            send_mail(
-                subject="Confirmation code for YAMDB",
-                message=f"Confirmation code: {confirmation_code}",
-                from_email=None,
-                recipient_list=[user.email],
-            )
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.is_valid(raise_exception=True)
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        data["email"] = user.email
+        data["username"] = user.username
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject="Confirmation code for YAMDB",
+            message=f"Confirmation code: {confirmation_code}",
+            from_email=None,
+            recipient_list=[user.email],
+        )
         return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_token(request):
-    serializer = GetJWTTokenSerializer(data=request.data)
+    serializer = ConfirmationCodeSerializer(data=request.data)
     data = {}
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -94,10 +88,7 @@ def get_token(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CategoryViewSet(
-    mixins.ListModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
+class CategoryViewSet(ListCreateDestroy):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = (filters.SearchFilter,)
@@ -106,10 +97,7 @@ class CategoryViewSet(
     lookup_field = "slug"
 
 
-class GenreViewSet(
-    mixins.ListModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
+class GenreViewSet(ListCreateDestroy):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
@@ -120,7 +108,7 @@ class GenreViewSet(
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = (
-        Title.objects.all().annotate(Avg("reviews__score")).order_by("name")
+        Title.objects.annotate(Avg("reviews__score")).order_by("name")
     )
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)

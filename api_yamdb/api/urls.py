@@ -9,25 +9,28 @@ from rest_framework.routers import DefaultRouter
 
 
 app_name = "api"
+auth_patterns = [
+    path("signup/", send_code, name="send_code"),
+    path("token/", get_token, name="get_token"),
+]
 
-router = DefaultRouter()
-router.register('categories', CategoryViewSet)
-router.register(
+v1_router = DefaultRouter()
+v1_router.register('categories', CategoryViewSet)
+v1_router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
     CommentViewSet,
     basename='title'
 )
-router.register('genres', GenreViewSet)
-router.register(
+v1_router.register('genres', GenreViewSet)
+v1_router.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet,
     basename='review'
 )
-router.register('titles', TitleViewSet)
-router.register('users', UserViewSet)
+v1_router.register('titles', TitleViewSet)
+v1_router.register('users', UserViewSet)
 
 urlpatterns = [
-    path("v1/auth/signup/", send_code, name="send_code"),
-    path("v1/auth/token/", get_token, name="get_token"),
-    path('v1/', include(router.urls)),
+    path('v1/', include(v1_router.urls)),
+    path('v1/auth/', include(auth_patterns))
 ]
