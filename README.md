@@ -115,7 +115,7 @@
 ```
 Получение списка всех жанров
 
-` GET /api/v1/titles/`
+` GET /api/v1/genres/`
 
 Результат:
 ```
@@ -149,9 +149,9 @@
 ```
 Получить список всех отзывов к определенному произведению по его id
 
-`GET /api/v1/titles/1/reviews/`
-
 `GET /api/v1/titles/{title_id}/reviews/`
+
+`GET /api/v1/titles/1/reviews/`
 
 Результат:
 
