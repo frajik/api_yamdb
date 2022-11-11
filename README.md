@@ -79,7 +79,7 @@
 ` GET /api/v1/titles/`
 
 Результат:
-
+```
 {
     "count": 32,
     "next": "http://127.0.0.1:8000/api/v1/titles/?page=2",
@@ -112,13 +112,13 @@
 
     ]
 }
-
+```
 Получение списка всех жанров
 
 ` GET /api/v1/titles/`
 
 Результат:
-
+```
 {
     "count": 15,
     "next": "http://127.0.0.1:8000/api/v1/genres/?page=2",
@@ -146,15 +146,16 @@
         }
     ]
 }
-
+```
 Получить список всех отзывов к определенному произведению по его id
 
 `GET /api/v1/titles/1/reviews/`
+
 `GET /api/v1/titles/{title_id}/reviews/`
 
 Результат:
 
-
+```
 {
     "count": 2,
     "next": null,
@@ -178,14 +179,15 @@
         }
     ]
 }
-
+```
 Получить список всех комментариев к отзыву по id
 
 `GET /api/v1/titles/{title_id}/reviews/{review_id}/comments/`
+
 `GET /api/v1/titles/1/reviews/6/comments/`
 
 Результаты: 
-
+```
 {
     "count": 3,
     "next": null,
@@ -202,7 +204,7 @@
         .    
     ]
 }
-
+```
 
 ## Документация API:
 - При запущенном проекте, для API Yatube, будет доступна полная документация, в формате Redoc, по адресу:
