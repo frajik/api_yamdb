@@ -78,14 +78,133 @@
 
 ` GET /api/v1/titles/`
 
+Результат:
+```
+{
+    "count": 32,
+    "next": "http://127.0.0.1:8000/api/v1/titles/?page=2",
+    "previous": null,
+    "results": [
+        {
+            "id": 3,
+            "name": "12 разгневанных мужчин",
+            "year": 1957,
+            "description": "",
+            "genre": [],
+            "category": {
+                "name": "Фильм",
+                "slug": "movie"
+            },
+            "rating": 7
+        },
+        {
+            "id": 30,
+            "name": "Deep Purple — Smoke on the Water",
+            "year": 1971,
+            "description": "",
+            "genre": [],
+            "category": {
+                "name": "Музыка",
+                "slug": "music"
+            },
+            "rating": 10
+        },
+
+    ]
+}
+```
+Получение списка всех жанров
+
+` GET /api/v1/genres/`
+
+Результат:
+```
+{
+    "count": 15,
+    "next": "http://127.0.0.1:8000/api/v1/genres/?page=2",
+    "previous": null,
+    "results": [
+        {
+            "name": "Драма",
+            "slug": "drama"
+        },
+        {
+            "name": "Комедия",
+            "slug": "comedy"
+        },
+        {
+            "name": "Вестерн",
+            "slug": "western"
+        },
+        {
+            "name": "Фэнтези",
+            "slug": "fantasy"
+        },
+        {
+            "name": "Фантастика",
+            "slug": "sci-fi"
+        }
+    ]
+}
+```
 Получить список всех отзывов к определенному произведению по его id
 
 `GET /api/v1/titles/{title_id}/reviews/`
 
+`GET /api/v1/titles/1/reviews/`
+
+Результат:
+
+```
+{
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "text": "Ставлю десять звёзд!\n...Эти голоса были чище и светлее тех, о которых мечтали в этом сером, убогом месте. Как будто две птички влетели и своими голосами развеяли стены наших клеток, и на короткий миг каждый человек в Шоушенке почувствовал себя свободным.",
+            "title": "Побег из Шоушенка",
+            "author": "bingobongo",
+            "score": 10,
+            "pub_date": "2022-11-11T10:29:55.514545Z"
+        },
+        {
+            "id": 2,
+            "text": "Не привыкай\n«Эти стены имеют одно свойство: сначала ты их ненавидишь, потом привыкаешь, а потом не можешь без них жить»",
+            "title": "Побег из Шоушенка",
+            "author": "capt_obvious",
+            "score": 10,
+            "pub_date": "2022-11-11T10:29:55.619551Z"
+        }
+    ]
+}
+```
 Получить список всех комментариев к отзыву по id
 
 `GET /api/v1/titles/{title_id}/reviews/{review_id}/comments/`
 
+`GET /api/v1/titles/1/reviews/6/comments/`
+
+Результаты: 
+```
+{
+    "count": 3,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "author": "faust",
+            "review": "Всё, как в разных языках программирования! В основном — похоже..." 
+            "pub_date": "2022-11-11T10:33:39.957382Z"
+        },
+        .
+        .
+        .    
+    ]
+}
+```
 
 ## Документация API:
 - При запущенном проекте, для API Yatube, будет доступна полная документация, в формате Redoc, по адресу:

@@ -1,6 +1,6 @@
 from csv import DictReader
-from django.core.management import BaseCommand
 
+from django.core.management import BaseCommand
 from Users.models import User
 
 ALREADY_LOADED_ERROR_MESSAGE = """
@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
         print("Loading data")
 
-        for row in DictReader(open('static/data/users.csv')):
+        for row in DictReader(open('static/data/users.csv', encoding='UTF-8')):
             user = User(
                 id=row['id'],
                 username=row['username'],

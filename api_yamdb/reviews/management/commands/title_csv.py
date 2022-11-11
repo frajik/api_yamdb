@@ -1,7 +1,7 @@
 from csv import DictReader
-from django.core.management import BaseCommand
 
-from reviews.models import Title
+from django.core.management import BaseCommand
+from reviews.models import Category, Title
 
 ALREADY_LOADED_ERROR_MESSAGE = """
 If you need to reload the Title data from the CSV file,
@@ -22,11 +22,13 @@ class Command(BaseCommand):
 
         print("Loading data")
 
-        for row in DictReader(open('static/data/titles.csv')):
+        for row in DictReader(
+            open('static/data/titles.csv', encoding='UTF-8')
+        ):
             title = Title(
                 id=row['id'],
                 name=row['name'],
                 year=row['year'],
-                category=row['category'],
+                category=Category.objects.get(pk=row['category']),
             )
             title.save()

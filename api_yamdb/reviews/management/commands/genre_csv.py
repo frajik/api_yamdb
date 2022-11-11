@@ -1,6 +1,6 @@
 from csv import DictReader
-from django.core.management import BaseCommand
 
+from django.core.management import BaseCommand
 from reviews.models import Genre
 
 ALREADY_LOADED_ERROR_MESSAGE = """
@@ -22,6 +22,6 @@ class Command(BaseCommand):
 
         print("Loading data")
 
-        for row in DictReader(open('static/data/genre.csv')):
+        for row in DictReader(open('static/data/genre.csv', encoding='UTF-8')):
             genre = Genre(id=row['id'], name=row['name'], slug=row['slug'])
             genre.save()
