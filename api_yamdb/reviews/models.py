@@ -1,5 +1,8 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from Users.models import User
+
+from .validators import validate_slug, validate_year
 
 
 class Category(models.Model):
@@ -11,7 +14,8 @@ class Category(models.Model):
     )
     slug = models.SlugField(
         max_length=50,
-        unique=True
+        unique=True,
+        validators=(validate_slug,)
     )
 
     class Meta:
@@ -31,7 +35,8 @@ class Genre(models.Model):
     )
     slug = models.SlugField(
         max_length=50,
-        unique=True
+        unique=True,
+        validators=(validate_slug,)
     )
 
     class Meta:
@@ -50,7 +55,8 @@ class Title(models.Model):
         verbose_name="Название произведения"
     )
     year = models.IntegerField(
-        verbose_name="Дата выхода"
+        verbose_name="Дата выхода",
+        validators=(validate_year,)
     )
     description = models.TextField(
         verbose_name="Описание "
@@ -99,7 +105,13 @@ class Review(models.Model):
         verbose_name="Дата публикации отзыва"
 
     )
-    score = models.IntegerField()
+    score = models.PositiveIntegerField(
+        verbose_name="Рейтинг",
+        validators=[
+            MinValueValidator(1, "Значение должно быть от 1 до 10"),
+            MaxValueValidator(10, "Значение должно быть от 1 до 10")
+        ]
+    )
 
     class Meta:
         verbose_name = "Отзыв"
